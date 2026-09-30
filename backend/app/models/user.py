@@ -1,12 +1,18 @@
 import uuid
 from datetime import datetime
 
+from typing import TYPE_CHECKING, List
 from sqlalchemy import Boolean, DateTime, String, Uuid, func
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 from app.utils.enums import UserRole
+
+if TYPE_CHECKING:
+    from app.models.audit_log import AuditLog
+    from app.models.document import Document
+    from app.models.verification import VerificationTask
 
 
 class User(Base):
@@ -52,4 +58,15 @@ class User(Base):
         nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
+    )
+
+    # Relationships
+    documents: Mapped[List["Document"]] = relationship(
+        "Document", back_populates="user", cascade="all, delete-orphan"
+    )
+    verification_tasks: Mapped[List["VerificationTask"]] = relationship(
+        "VerificationTask", back_populates="assigned_user"
+    )
+    audit_logs: Mapped[List["AuditLog"]] = relationship(
+        "AuditLog", back_populates="user"
     )

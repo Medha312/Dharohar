@@ -1,3 +1,4 @@
+from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,6 +17,28 @@ class Settings(BaseSettings):
     )
     REDIS_URL: str = "redis://localhost:6379/0"
     CORS_ORIGINS: str = "http://localhost:5173"
+
+    # Security & JWT
+    SECRET_KEY: str = "dharohar-secret-key-development-minimum-32-chars-long"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # Storage
+    STORAGE_DIR: str = "uploads"
+    MAX_UPLOAD_SIZE_BYTES: int = 50 * 1024 * 1024  # 50 MB
+    ALLOWED_EXTENSIONS: list[str] = [".pdf", ".jpg", ".jpeg", ".png"]
+
+    # Thresholds
+    HIGH_CONFIDENCE_THRESHOLD: float = 0.85
+    LOW_CONFIDENCE_THRESHOLD: float = 0.65
+
+    # Models
+    ENHANCEMENT_MODEL_PATH: str = "models/enhancement/best.pt"
+    OCR_MODEL_PATH: str = "models/ocr/best.pt"
+
+    # Celery execution mode
+    CELERY_ALWAYS_EAGER: bool = False
 
 
 def get_settings() -> Settings:

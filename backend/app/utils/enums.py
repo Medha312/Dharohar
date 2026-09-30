@@ -5,3 +5,139 @@ class UserRole(str, Enum):
     USER = "USER"
     VERIFIER = "VERIFIER"
     ADMIN = "ADMIN"
+
+
+class DocumentStatus(str, Enum):
+    UPLOADED = "UPLOADED"
+    QUEUED = "QUEUED"
+    PROCESSING = "PROCESSING"
+    AWAITING_VERIFICATION = "AWAITING_VERIFICATION"
+    VERIFIED = "VERIFIED"
+    FAILED = "FAILED"
+
+
+class ProcessingStatus(str, Enum):
+    QUEUED = "QUEUED"
+    PROCESSING = "PROCESSING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class ProcessingStage(str, Enum):
+    QUEUED = "QUEUED"
+    PAGE_PROCESSING = "PAGE_PROCESSING"
+    STRUCTURE_DETECTION = "STRUCTURE_DETECTION"
+    IMAGE_ENHANCEMENT = "IMAGE_ENHANCEMENT"
+    LANGUAGE_DETECTION = "LANGUAGE_DETECTION"
+    DOCUMENT_TYPE_DETECTION = "DOCUMENT_TYPE_DETECTION"
+    OCR = "OCR"
+    FIELD_EXTRACTION = "FIELD_EXTRACTION"
+    VALIDATION = "VALIDATION"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class TextType(str, Enum):
+    PRINTED = "PRINTED"
+    HANDWRITTEN = "HANDWRITTEN"
+    UNKNOWN = "UNKNOWN"
+
+
+class ValidationStatus(str, Enum):
+    VALID = "VALID"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    NOT_FOUND = "NOT_FOUND"
+
+
+class VerificationStatus(str, Enum):
+    UNVERIFIED = "UNVERIFIED"
+    PENDING_REVIEW = "PENDING_REVIEW"
+    APPROVED = "APPROVED"
+    CORRECTED = "CORRECTED"
+    REJECTED = "REJECTED"
+
+
+class ValidationIssueType(str, Enum):
+    OWNER_MISMATCH = "OWNER_MISMATCH"
+    KHATA_MISMATCH = "KHATA_MISMATCH"
+    KHASRA_MISMATCH = "KHASRA_MISMATCH"
+    AREA_MISMATCH = "AREA_MISMATCH"
+    VILLAGE_MISMATCH = "VILLAGE_MISMATCH"
+    DATE_MISMATCH = "DATE_MISMATCH"
+    DUPLICATE_RECORD = "DUPLICATE_RECORD"
+    FORMAT_ERROR = "FORMAT_ERROR"
+    CROSS_FIELD_CONFLICT = "CROSS_FIELD_CONFLICT"
+    LOW_CONFIDENCE = "LOW_CONFIDENCE"
+
+
+class Severity(str, Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+class TaskStatus(str, Enum):
+    PENDING = "PENDING"
+    IN_REVIEW = "IN_REVIEW"
+    COMPLETED = "COMPLETED"
+    REJECTED = "REJECTED"
+
+
+class TaskPriority(str, Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+
+class VerificationActionType(str, Enum):
+    APPROVED = "APPROVED"
+    CORRECTED = "CORRECTED"
+    REJECTED = "REJECTED"
+
+
+class GISSource(str, Enum):
+    DOCUMENT = "DOCUMENT"
+    MANUAL = "MANUAL"
+    EXTERNAL_DATA = "EXTERNAL_DATA"
+    SYSTEM = "SYSTEM"
+
+
+class ModelType(str, Enum):
+    ENHANCEMENT = "ENHANCEMENT"
+    OCR = "OCR"
+    DOCUMENT_TYPE = "DOCUMENT_TYPE"
+    OTHER = "OTHER"
+
+
+class AuditAction(str, Enum):
+    DOCUMENT_CREATED = "DOCUMENT_CREATED"
+    DOCUMENT_UPDATED = "DOCUMENT_UPDATED"
+    DOCUMENT_DELETED = "DOCUMENT_DELETED"
+    PROCESSING_STARTED = "PROCESSING_STARTED"
+    PROCESSING_COMPLETED = "PROCESSING_COMPLETED"
+    PROCESSING_FAILED = "PROCESSING_FAILED"
+    FIELD_CORRECTED = "FIELD_CORRECTED"
+    FIELD_APPROVED = "FIELD_APPROVED"
+    FIELD_REJECTED = "FIELD_REJECTED"
+    RECORD_VERIFIED = "RECORD_VERIFIED"
+    GIS_UPDATED = "GIS_UPDATED"
+    USER_UPDATED = "USER_UPDATED"
+
+
+CANONICAL_FIELD_NAMES = [
+    "owner_name",
+    "father_husband_name",
+    "khata_number",
+    "khasra_number",
+    "survey_number",
+    "area",
+    "village",
+    "tehsil",
+    "district",
+    "land_classification",
+    "ownership_type",
+    "mutation_number",
+    "registration_number",
+]

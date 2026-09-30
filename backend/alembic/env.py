@@ -10,7 +10,7 @@ sys.path.insert(0, str(BACKEND_ROOT))
 
 from app.core.config import get_settings  # noqa: E402
 from app.db.base import Base  # noqa: E402
-from app.models import User  # noqa: E402, F401
+import app.models  # noqa: E402, F401
 
 config = context.config
 
