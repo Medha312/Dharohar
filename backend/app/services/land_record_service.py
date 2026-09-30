@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import List, Optional, Tuple
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
@@ -105,6 +105,8 @@ class LandRecordService:
         tehsil: Optional[str] = None,
         district: Optional[str] = None,
         status: Optional[str] = None,
+        created_after: Optional[date] = None,
+        created_before: Optional[date] = None,
         limit: int = 50,
         offset: int = 0,
     ) -> Tuple[List[LandRecord], int]:
@@ -125,6 +127,20 @@ class LandRecordService:
             query = query.where(LandRecord.district.ilike(f"%{district}%"))
         if status:
             query = query.where(LandRecord.verification_status == status)
+        if created_after:
+            # Convert date → UTC-aware datetime at start of day
+            start_dt = datetime(
+                created_after.year, created_after.month, created_after.day,
+                tzinfo=timezone.utc,
+            )
+            query = query.where(LandRecord.created_at >= start_dt)
+        if created_before:
+            # End of day — include the full requested date
+            end_dt = datetime(
+                created_before.year, created_before.month, created_before.day,
+                23, 59, 59, tzinfo=timezone.utc,
+            )
+            query = query.where(LandRecord.created_at <= end_dt)
 
         # Count total
         from sqlalchemy import func

@@ -1,0 +1,171 @@
+# ---------------------------------------------------------------------------
+# Dharohar CI — runs on every push and pull request
+#
+# Jobs:
+#   lint         — ruff (fast linter) + import-error check
+#   test         — pytest against real PostgreSQL + Redis service containers
+#   docker-build — verifies the backend Docker image builds successfully
+# ---------------------------------------------------------------------------
+
+name: CI
+
+on:
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+    branches: ["main", "develop"]
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+
+  # --------------------------------------------------------------------------
+  # Job 1 — Lint
+  # --------------------------------------------------------------------------
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-lint-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: pip-lint-${{ env.PYTHON_VERSION }}-
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install --upgrade pip && pip install -r requirements.txt ruff
+
+      - name: Run ruff
+        working-directory: backend
+        run: ruff check app/ tests/ --output-format=github
+
+      - name: Check for import errors
+        working-directory: backend
+        run: python -c "import app.main"
+        env:
+          DATABASE_URL: "postgresql+psycopg://dharohar:dharohar@localhost:5432/dharohar"
+          REDIS_URL: "redis://localhost:6379/0"
+          SECRET_KEY: "ci-lint-secret-key-minimum-32-chars-long!!"
+          CELERY_ALWAYS_EAGER: "true"
+
+  # --------------------------------------------------------------------------
+  # Job 2 — Tests (matrix: Python 3.11 + 3.12)
+  # --------------------------------------------------------------------------
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: dharohar
+          POSTGRES_PASSWORD: dharohar
+          POSTGRES_DB: dharohar_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dharohar -d dharohar_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: "postgresql+psycopg://dharohar:dharohar@localhost:5432/dharohar_test"
+      TEST_DATABASE_URL: "postgresql+psycopg://dharohar:dharohar@localhost:5432/dharohar_test"
+      REDIS_URL: "redis://localhost:6379/0"
+      SECRET_KEY: "ci-test-secret-key-minimum-32-chars-long!!!"
+      ALGORITHM: "HS256"
+      ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      CORS_ORIGINS: "http://localhost:5173"
+      STORAGE_DIR: "/tmp/dharohar-uploads"
+      MAX_UPLOAD_SIZE_BYTES: "52428800"
+      ENHANCEMENT_MODEL_PATH: "models/enhancement/best.pt"
+      OCR_MODEL_PATH: "models/ocr/best.pt"
+      ENVIRONMENT: "development"
+      CELERY_ALWAYS_EAGER: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-test-${{ matrix.python-version }}-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: pip-test-${{ matrix.python-version }}-
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Create upload directory
+        run: mkdir -p /tmp/dharohar-uploads
+
+      - name: Run Alembic migrations
+        working-directory: backend
+        run: alembic upgrade head
+
+      - name: Run tests
+        working-directory: backend
+        run: pytest -v --tb=short
+
+  # --------------------------------------------------------------------------
+  # Job 3 — Docker build verification
+  # --------------------------------------------------------------------------
+  docker-build:
+    name: Docker build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image (no push)
+        uses: docker/build-push-action@v5
+        with:
+          # Build context is repo root so the Dockerfile can reach ml/
+          context: .
+          file: ./backend/Dockerfile
+          target: runtime
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: dharohar-backend:ci

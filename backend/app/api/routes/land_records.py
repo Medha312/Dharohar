@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, status
 
@@ -25,6 +26,8 @@ def list_land_records(
     tehsil: Optional[str] = Query(None),
     district: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
+    created_after: Optional[date] = Query(None, description="Include records created on or after this date (YYYY-MM-DD)"),
+    created_before: Optional[date] = Query(None, description="Include records created on or before this date (YYYY-MM-DD)"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ) -> PaginatedResponse[LandRecordRead]:
@@ -39,6 +42,8 @@ def list_land_records(
         tehsil=tehsil,
         district=district,
         status=status,
+        created_after=created_after,
+        created_before=created_before,
         limit=page_size,
         offset=offset,
     )
